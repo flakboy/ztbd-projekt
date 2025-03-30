@@ -1,0 +1,29 @@
+services:
+    db_msql:
+        image: mcr.microsoft.com/mssql/server:latest
+        env_file: ".env"
+        environment:
+            - ACCEPT_EULA=Y
+            - MSSQL_PID=Developer
+            - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+        ports:
+            - 1433:1433
+        profiles:
+            - mssql
+    db_postgres:
+        image: bitnami/postgresql:latest
+        ports:
+            - 5432:5432
+        environment:
+            - POSTGRES_USER=${POSTGRES_NAME}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+        profiles:
+            - postgres
+    db_cassandra:
+        image: cassandra:latest
+        ports:
+            - 7000:7000
+            - 7001:7001
+            - 9042:9042
+        profiles:
+            - cassandra
