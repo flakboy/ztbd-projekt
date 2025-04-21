@@ -27,3 +27,33 @@ services:
             - 9042:9042
         profiles:
             - cassandra
+    # db_elastic:
+    #     image: docker.elastic.co/elasticsearch/elasticsearch:sha256-fffb0fb3d8305caded6bdfc7c2308133d3a67e71a4011e9867b9a2c3a7a3a7e5
+    #     ports:
+    #         - 9200:9200
+    #         - 9300:9300
+    #     profiles:
+    #         - elastic
+    #     environment:
+    #         - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
+    #     volumes:
+    #         - data_elastic:/usr/share/elasticsearch/data
+    # kibana:
+    #     image: docker.elastic.co/kibana/kibana:8.17.4
+    #     ports:
+    #         - 5601:5601
+    #     profiles:
+    #         - elastic
+    
+    db_mongo:
+        image: mongo
+        ports:
+            - 27017:27017
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+            - config=/etc/mongo/mongod.conf
+        profiles:
+            - mongo
+        volumes:
+            - ./mongo/config:/etc/mongo/:ro
