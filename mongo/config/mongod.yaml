@@ -1,0 +1,3 @@
+operationProfiling:
+    mode: all
+    # filter: '{"$and":[{"op":{"$eq":"query"}},{"millis":{"$gt":20}}]}'

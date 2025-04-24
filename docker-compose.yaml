@@ -47,13 +47,16 @@ services:
     
     db_mongo:
         image: mongo
+        profiles:
+            - mongo
         ports:
             - 27017:27017
         environment:
             - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
             - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
-            - config=/etc/mongo/mongod.conf
-        profiles:
-            - mongo
+        command:
+            - '--config'
+            - '/etc/mongo/mongod.yaml'
         volumes:
             - ./mongo/config:/etc/mongo/:ro
+            - ./mongo/initdb/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
