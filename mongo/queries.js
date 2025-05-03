@@ -1,40 +1,29 @@
-// The current database to use.
-use("yelp");
-
-// Search for documents in the current collection.
-db.getCollection("system.profile")
-    .find(
-        {
-            op: "bulkWrite",
-        },
-        {
-            millis: 1,
-            ninserted: 1,
-        }
-    )
-    .sort({
-        /*
-         * fieldA: 1 // ascending
-         * fieldB: -1 // descending
-         */
-    });
-
+//Get time statistics of bulkWrite operations
 use("yelp");
 db.getCollection("system.profile").aggregate([
     {
         $match: {
-            // op: "bulkWrite",
-            op: "update",
+            op: "bulkWrite",
         },
     },
     {
         $group: {
             _id: "$ns",
             millis: { $sum: "$millis" },
-            nModified: { $sum: "$nModified" },
+            nInserted: { $sum: "$ninserted" },
+            // nModified: { $sum: "$nModified" },
             //The total CPU time spent by a query operation in nanoseconds.
             //This field is only available on Linux systems.
             totalCpuNanos: { $sum: "$cpuNanos" },
+            avgCpu: { $avg: "$cpuNanos" },
+        },
+    },
+    {
+        $project: {
+            millis: 1,
+            nInserted: 1,
+            avgCpuSeconds: { $divide: ["$avgCpu", 1_000_000_000] },
+            cpuSeconds: { $divide: ["$totalCpuNanos", 1_000_000_000] },
         },
     },
 ]);

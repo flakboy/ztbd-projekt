@@ -13,7 +13,7 @@ db.setProfilingLevel(0);
 db.system.profile.drop();
 db.createCollection("system.profile", {
     capped: true,
-    size: 1024 * 1024 * 1024,
+    size: 10 * 1024 * 1024 * 1024,
 });
 
 // Set logging to "all"
