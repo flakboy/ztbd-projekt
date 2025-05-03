@@ -27,24 +27,34 @@ services:
             - 9042:9042
         profiles:
             - cassandra
-    # db_elastic:
-    #     image: docker.elastic.co/elasticsearch/elasticsearch:sha256-fffb0fb3d8305caded6bdfc7c2308133d3a67e71a4011e9867b9a2c3a7a3a7e5
-    #     ports:
-    #         - 9200:9200
-    #         - 9300:9300
-    #     profiles:
-    #         - elastic
-    #     environment:
-    #         - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
-    #     volumes:
-    #         - data_elastic:/usr/share/elasticsearch/data
-    # kibana:
-    #     image: docker.elastic.co/kibana/kibana:8.17.4
-    #     ports:
-    #         - 5601:5601
-    #     profiles:
-    #         - elastic
-    
+            - cassandra-init
+        environment:
+            - CASSANDRA_AUTHENTICATOR=PasswordAuthenticator
+            - CASSANDRA_PASSWORD_SEEDER=yes
+            - CASSANDRA_USER=${CASSANDRA_USER}
+            - CASSANDRA_PASSWORD=${CASSANDRA_PASSWORD}
+        # volumes:
+            # - ./cassandra/init/init.cql:/scripts/data.cql
+            # - ./cassandra/init:/docker-entrypoint-initdb.d
+        # https://stackoverflow.com/a/51476148
+        healthcheck:
+            test: ["CMD", "cqlsh", "-u db_cassandra", "-p ${CASSANDRA_PASSWORD}" ,"-e describe keyspaces"]
+            interval: 15s
+            timeout: 10s
+            retries: 10
+    db_cassandra_init:
+        image: cassandra:latest
+        profiles:
+            - cassandra-init
+        environment:
+            - CQLSH_HOST=db_cassandra
+        depends_on:
+            db_cassandra:
+                condition: service_started
+        volumes:
+            - ./cassandra/init:/init
+        command: /bin/bash -c "sleep 30 && echo 'loading cassandra keyspace...' && cqlsh db_cassandra 9042 -f /init/init.cql && echo 'keyspace initialized.'"
+
     db_mongo:
         image: mongo
         profiles:
@@ -59,4 +69,4 @@ services:
             - '/etc/mongo/mongod.yaml'
         volumes:
             - ./mongo/config:/etc/mongo/:ro
-            - ./mongo/initdb/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+            - ./mongo/init/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
