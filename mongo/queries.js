@@ -20,29 +20,24 @@ db.getCollection("system.profile")
     });
 
 use("yelp");
-db.getCollection("system.profile").aggregate(
-    [
-        {
-            $match: {
-                op: "bulkWrite", //: "update"
-            },
-        },
-        {
-            $group: {
-                _id: "$ns",
-                millis: { $sum: "$millis" },
-                ninserted: { $sum: "$ninserted" },
-            },
-        },
-    ],
+db.getCollection("system.profile").aggregate([
     {
-        $project: {
-            _id: 0,
-            millis: "$millis",
-            ninserted: "$ninserted",
+        $match: {
+            // op: "bulkWrite",
+            op: "update",
         },
-    }
-);
+    },
+    {
+        $group: {
+            _id: "$ns",
+            millis: { $sum: "$millis" },
+            nModified: { $sum: "$nModified" },
+            //The total CPU time spent by a query operation in nanoseconds.
+            //This field is only available on Linux systems.
+            totalCpuNanos: { $sum: "$cpuNanos" },
+        },
+    },
+]);
 
 //GET VOTE COUNT
 db.getCollection("reviews").aggregate([
