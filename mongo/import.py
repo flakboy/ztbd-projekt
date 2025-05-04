@@ -42,15 +42,47 @@ def transform_review(doc):
     doc["_id"] = id
     doc["votes"] = []
 
+    del doc["stars"]
+    del doc["useful"]
+    del doc["funny"]
+    del doc["cool"]
+
+
 def transform_user(doc):
     id_key = "user_id"
     id = doc.pop(id_key, None)
     doc["_id"] = id
 
+    del doc["review_count"]
+    del doc["useful"]
+    del doc["funny"]
+    del doc["cool"]
+    del doc["elite"]
+    del doc["friends"]
+    del doc["fans"]
+    del doc["average_stars"]
+    del doc["compliment_hot"]
+    del doc["compliment_more"]
+    del doc["compliment_profile"]
+    del doc["compliment_cute"]
+    del doc["compliment_list"]
+    del doc["compliment_note"]
+    del doc["compliment_plain"]
+    del doc["compliment_cool"]
+    del doc["compliment_funny"]
+    del doc["compliment_writer"]
+    del doc["compliment_photos"]
+
+
 def transform_business(doc):
     id_key = "business_id"
     id = doc.pop(id_key, None)
     doc["_id"] = id
+
+    del doc["stars"]
+    del doc["review_count"]
+    del doc["is_open"]
+
 
 
 datasets = [
@@ -63,22 +95,22 @@ for dataset, collection, transform in datasets:
     import_json_file(dataset, collection, transform)
 
 
-# add votes to reviews
-vote_file_path = "../data/gen/votes.json"
-with open(vote_file_path, "rt", encoding="utf-8") as data:
-    operations = []
-    print(f"LOADING FILE: {vote_file_path}")
-    for line in data:
-
-        doc = json.loads(line)
-        review_id = doc.pop("review_id", None)
-
-        print(review_id)
-        print(db["reviews"].update_one(
-                {"_id": review_id},
-                {"$push": {"votes": doc}}
-        ))
-        # sleep(10000)
-
-
-client.close()
+# # add votes to reviews
+# vote_file_path = "../data/gen/votes.json"
+# with open(vote_file_path, "rt", encoding="utf-8") as data:
+#     operations = []
+#     print(f"LOADING FILE: {vote_file_path}")
+#     for line in data:
+#
+#         doc = json.loads(line)
+#         review_id = doc.pop("review_id", None)
+#
+#         print(review_id)
+#         print(db["reviews"].update_one(
+#                 {"_id": review_id},
+#                 {"$push": {"votes": doc}}
+#         ))
+#         # sleep(10000)
+#
+#
+# client.close()
