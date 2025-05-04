@@ -11,7 +11,7 @@ services:
         profiles:
             - mssql
     db_postgres:
-        image: bitnami/postgresql:latest
+        image: postgresql:latest
         ports:
             - 5432:5432
         environment:
@@ -38,7 +38,8 @@ services:
             # - ./cassandra/init:/docker-entrypoint-initdb.d
         # https://stackoverflow.com/a/51476148
         healthcheck:
-            test: ["CMD", "cqlsh", "-u db_cassandra", "-p ${CASSANDRA_PASSWORD}" ,"-e describe keyspaces"]
+            # test: ["CMD", "cqlsh", "db_cassandra", "9042", "-u ${CASSANDRA_USER}", "-p ${CASSANDRA_PASSWORD}" ,"-e 'describe keyspaces'"]
+            test: cqlsh db_cassandra 9042 -u ${CASSANDRA_USER} -p ${CASSANDRA_PASSWORD} -e 'describe keyspaces'
             interval: 15s
             timeout: 10s
             retries: 10
@@ -50,10 +51,11 @@ services:
             - CQLSH_HOST=db_cassandra
         depends_on:
             db_cassandra:
-                condition: service_started
+                condition: service_healthy
         volumes:
             - ./cassandra/init:/init
-        command: /bin/bash -c "sleep 30 && echo 'loading cassandra keyspace...' && cqlsh db_cassandra 9042 -f /init/init.cql && echo 'keyspace initialized.'"
+            - ./data/csv/:/var/cql
+        command: /bin/bash -c "echo 'loading cassandra keyspace...' && cqlsh db_cassandra 9042 -f /init/init.cql && echo 'keyspace initialized.'"
 
     db_mongo:
         image: mongo
