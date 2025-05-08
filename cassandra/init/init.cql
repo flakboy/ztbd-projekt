@@ -10,6 +10,7 @@ CREATE KEYSPACE IF NOT EXISTS yelp WITH REPLICATION = { 'class' : 'SimpleStrateg
 
 USE yelp;
 
+DROP TABLE IF EXISTS users;
 CREATE TABLE IF NOT EXISTS users (
     user_id text,
     user_name varchar,
@@ -18,7 +19,6 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 DROP TABLE IF EXISTS reviews;
-
 CREATE TABLE IF NOT EXISTS reviews (
     review_id text,
     user_id text,
@@ -28,16 +28,16 @@ CREATE TABLE IF NOT EXISTS reviews (
     PRIMARY KEY ((business_id), review_id, date_reviewed)
 );
 
-COPY reviews (
-    review_id,
-    user_id,
-    business_id,
-    review_text,
-    date_reviewed
-) FROM '/var/cql/reviews.csv'
-WITH HEADER=TRUE
-AND DELIMITER='|'
-AND MAXATTEMPTS=15;
+-- COPY reviews (
+--     review_id,
+--     user_id,
+--     business_id,
+--     review_text,
+--     date_reviewed
+-- ) FROM '/var/cql/reviews.csv'
+-- WITH HEADER=TRUE
+-- AND DELIMITER='|'
+-- AND MAXATTEMPTS=15;
 
 -- -- Insert some data
 -- INSERT INTO store.shopping_cart

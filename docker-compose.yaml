@@ -20,10 +20,16 @@ services:
         profiles:
             - postgres
     db_cassandra:
-        image: cassandra:latest
+        build:
+            context: ./cassandra
+            args:
+                - CASSANDRA_JMX_USER=${CASSANDRA_JMX_USER}
+                - CASSANDRA_JMX_PASSWORD=${CASSANDRA_JMX_PASSWORD}
         ports:
             - 7000:7000
             - 7001:7001
+            - 7199:7199
+            - 7200:7200
             - 9042:9042
         profiles:
             - cassandra
@@ -33,6 +39,9 @@ services:
             - CASSANDRA_PASSWORD_SEEDER=yes
             - CASSANDRA_USER=${CASSANDRA_USER}
             - CASSANDRA_PASSWORD=${CASSANDRA_PASSWORD}
+            - LOCAL_JMX=no
+            # - JVM_OPTS=-Dcom.sun.management.jmxremote.rmi.port=7199 -Dcom.sun.management.jmxremote.access.file=/etc/cassandra/jmxremote.access -Djava.rmi.server.hostname=db_cassandra
+            - JVM_OPTS=-Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.rmi.port=7200 -Dcom.sun.management.jmxremote.access.file=/etc/cassandra/jmxremote.access -Dcom.sun.management.jmxremote.host="db_cassandra" -Djava.rmi.server.hostname="db_cassandra"
         # volumes:
             # - ./cassandra/init/init.cql:/scripts/data.cql
             # - ./cassandra/init:/docker-entrypoint-initdb.d
@@ -55,7 +64,11 @@ services:
         volumes:
             - ./cassandra/init:/init
             - ./data/csv/:/var/cql
-        command: /bin/bash -c "echo 'loading cassandra keyspace...' && cqlsh db_cassandra 9042 -f /init/init.cql && echo 'keyspace initialized.'"
+            - ./data/sstable/:/var/sstable
+        
+        # Needs to execute "nodetool -u <user> -pw <password> upgradesstables -a yelp" after initializing tables, or the main container will fail to launch after reboot
+        # command: /bin/bash -c "echo 'Importing data...' && cqlsh db_cassandra 9042 -f /init/init.cql && sstableloader -d db_cassandra /var/sstable/yelp/reviews && echo 'keyspace initialized.'"
+        command: /bin/bash -c "echo 'Importing data...' && sleep 36000"
 
     db_mongo:
         image: mongo
