@@ -21,7 +21,7 @@ CREATE TABLE businesses (
     postal_code VARCHAR(20),
     latitude DECIMAL(9,6),
     longitude DECIMAL(9,6),
-    categories VARCHAR(300)
+    categories TEXT
 );
 
 CREATE TABLE reviews (
@@ -29,7 +29,7 @@ CREATE TABLE reviews (
     user_id INT NOT NULL,
     business_id INT NOT NULL,
     rating DECIMAL(3,1) NOT NULL,
-    review_text VARCHAR(300),
+    review_text TEXT,
     review_date DATE,
     CONSTRAINT fk_reviews_users
         FOREIGN KEY (user_id)

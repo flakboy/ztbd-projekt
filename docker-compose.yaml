@@ -10,6 +10,7 @@ services:
             - 1433:1433
         profiles:
             - mssql
+
     db_postgres:
         image: postgresql:latest
         ports:
@@ -19,6 +20,9 @@ services:
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
         profiles:
             - postgres
+        volumes:
+            - ./postgres_sql/postgeres_baza.sql:/docker-entrypoint-initdb.d/postgeres_baza.sql:ro
+
     db_cassandra:
         build:
             context: ./cassandra
