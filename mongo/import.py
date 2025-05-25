@@ -1,5 +1,7 @@
+import math
 import pymongo
 import json
+import time
 
 from pymongo import InsertOne
 
@@ -8,19 +10,27 @@ client = pymongo.MongoClient("mongodb://mongo:zaq1%40WSX@localhost:27017/")
 db = client["yelp"]
 
 # test different batch sizes to compare insert speed
-MAX_BATCH_SIZE = 10000
+# MAX_BATCH_SIZE = 10000
+MAX_BATCH_SIZE = 1
 
 # Internally, InsertMany uses BulkWrite so it should make no difference which one we use
 # https://stackoverflow.com/questions/35758690/mongodb-insertmany-vs-bulkwrite
-def import_json_file(path: str, collection: str, doc_transform):
+def import_json_file(path: str, collection: str, doc_transform, max_doc_count = math.inf):
     operations = []
     print(f"LOADING FILE: {path}")
     with open(path, "rt", encoding="utf-8") as data:
-        for line in data:
-            if len(operations) >= MAX_BATCH_SIZE:
+        start = time.time()
+        for index, line in enumerate(data):
+            if len(operations) >= MAX_BATCH_SIZE or index >= max_doc_count:
                 result = client.bulk_write(operations, verbose_results=True)
-                print("batch inserted!", len(result.insert_results))
+                # print("batch inserted!", len(result.insert_results))
                 operations = []
+
+            if index >= max_doc_count:
+                break
+
+            if index % 10_000 == 0:
+                print(f"Inserted {index} records!")
 
             doc = json.loads(line)
             doc_transform(doc)
@@ -31,7 +41,9 @@ def import_json_file(path: str, collection: str, doc_transform):
                     namespace=collection
                 )
             )
+        end = time.time()
 
+        print(end - start)
     if len(operations) > 0:
         client.bulk_write(operations)
 
@@ -42,7 +54,6 @@ def transform_review(doc):
     doc["_id"] = id
     doc["votes"] = []
 
-    del doc["stars"]
     del doc["useful"]
     del doc["funny"]
     del doc["cool"]
@@ -91,8 +102,10 @@ datasets = [
     ("../data/yelp_dataset/yelp_academic_dataset_review.json", "yelp.reviews", transform_review)
 ]
 
+max_count = 100_000
+
 for dataset, collection, transform in datasets:
-    import_json_file(dataset, collection, transform)
+    import_json_file(dataset, collection, transform, max_count)
 
 
 # # add votes to reviews
