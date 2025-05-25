@@ -15,8 +15,6 @@ password = os.environ['CASSANDRA_PASSWORD']
 auth_provider = PlainTextAuthProvider(
         username=user, password=password)
 
-#This will attempt to connection to a Cassandra instance
-# on your local machine (127.0.0.1)
 cluster = Cluster([node_url], auth_provider=auth_provider)
 session = cluster.connect()
 

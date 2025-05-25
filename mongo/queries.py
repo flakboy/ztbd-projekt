@@ -1,19 +1,16 @@
 import pymongo
 import time
 
-
 client = pymongo.MongoClient("mongodb://mongo:zaq1%40WSX@localhost:27017/")
 
 db = client["yelp"]
 
+reviews = db.reviews
+ids = ["gmjsEdUsKpj9Xxu6pdjH0g","e4Vwtrqf-wpJfwesgvdgxQ", "04UD14gamNjLY0IDYVhHJg"]
+samples_count = 1000
+
 
 start_time = time.time()
-
-ids = ["gmjsEdUsKpj9Xxu6pdjH0g","e4Vwtrqf-wpJfwesgvdgxQ", "04UD14gamNjLY0IDYVhHJg"]
-
-reviews = db.reviews
-
-samples_count = 1000
 for i in range(0, samples_count):
     reviews.find({
         "business_id": ids[i % len(ids)]
