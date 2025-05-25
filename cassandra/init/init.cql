@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS reviews_per_business (
     review_id text,
     user_id text,
     business_id text,
+    stars decimal,
     review_text varchar,
     date_reviewed timestamp,
     PRIMARY KEY ((business_id), review_id, date_reviewed)
@@ -39,23 +40,12 @@ CREATE TABLE IF NOT EXISTS reviews_per_users (
     review_id text,
     user_id text,
     business_id text,
+    stars decimal,
     review_text varchar,
     date_reviewed timestamp,
     PRIMARY KEY ((user_id), review_id, date_reviewed)
 );
 
-
--- INSERT INTO user (name, addresses)
---    VALUES ('z3 Pr3z1den7', {
---      'home' : {
---         street: '1600 Pennsylvania Ave NW',
---         city: 'Washington',
---         zip: '20500',
---         phones: { 'cell' : { country_code: 1, number: '202 456-1111' },
---                   'landline' : { country_code: 1, number: '...' } }
---      },
---   }
--- );
 
 CREATE TYPE IF NOT EXISTS opening_hours(
     monday tuple<time, time>,
@@ -67,8 +57,8 @@ CREATE TYPE IF NOT EXISTS opening_hours(
     sunday tuple<time, time>
 );
 
-DROP TABLE IF EXISTS businessess;
-CREATE TABLE IF NOT EXISTS businessess (
+DROP TABLE IF EXISTS businesses;
+CREATE TABLE IF NOT EXISTS businesses (
     business_id text,
     name varchar,
     address varchar,
