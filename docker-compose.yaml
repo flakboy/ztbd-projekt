@@ -24,11 +24,13 @@ services:
             - ./postgres_sql/postgeres_baza.sql:/docker-entrypoint-initdb.d/postgeres_baza.sql:ro
 
     db_cassandra:
-        build:
-            context: ./cassandra
-            args:
-                - CASSANDRA_JMX_USER=${CASSANDRA_JMX_USER}
-                - CASSANDRA_JMX_PASSWORD=${CASSANDRA_JMX_PASSWORD}
+        image: cassandra:latest
+        # build:
+        #     # context: ./
+        #     # dockerfile: ./cassandra/Dockerfile
+        #     args:
+        #         - CASSANDRA_JMX_USER=${CASSANDRA_JMX_USER}
+        #         - CASSANDRA_JMX_PASSWORD=${CASSANDRA_JMX_PASSWORD}
         ports:
             - 7000:7000
             - 7001:7001
@@ -43,12 +45,13 @@ services:
             - CASSANDRA_PASSWORD_SEEDER=yes
             - CASSANDRA_USER=${CASSANDRA_USER}
             - CASSANDRA_PASSWORD=${CASSANDRA_PASSWORD}
-            - LOCAL_JMX=no
+            # - LOCAL_JMX=no
             # - JVM_OPTS=-Dcom.sun.management.jmxremote.rmi.port=7199 -Dcom.sun.management.jmxremote.access.file=/etc/cassandra/jmxremote.access -Djava.rmi.server.hostname=db_cassandra
-            - JVM_OPTS=-Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.rmi.port=7200 -Dcom.sun.management.jmxremote.access.file=/etc/cassandra/jmxremote.access -Dcom.sun.management.jmxremote.host="db_cassandra" -Djava.rmi.server.hostname="db_cassandra"
-        # volumes:
-            # - ./cassandra/init/init.cql:/scripts/data.cql
-            # - ./cassandra/init:/docker-entrypoint-initdb.d
+            # - JVM_OPTS=-Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.rmi.port=7200 -Dcom.sun.management.jmxremote.access.file=/etc/cassandra/jmxremote.access -Dcom.sun.management.jmxremote.host="db_cassandra" -Djava.rmi.server.hostname="db_cassandra"
+        volumes:
+            # - ./cassandra/init:/init
+            - ./data/csv/:/var/cql
+            - ./data/sstable/:/var/sstable
         # https://stackoverflow.com/a/51476148
         healthcheck:
             # test: ["CMD", "cqlsh", "db_cassandra", "9042", "-u ${CASSANDRA_USER}", "-p ${CASSANDRA_PASSWORD}" ,"-e 'describe keyspaces'"]
@@ -64,16 +67,22 @@ services:
             - CQLSH_HOST=db_cassandra
         depends_on:
             db_cassandra:
-                condition: service_healthy
+                condition: service_started
         volumes:
             - ./cassandra/init:/init
-            - ./data/csv/:/var/cql
-            - ./data/sstable/:/var/sstable
-        
-        # Needs to execute "nodetool -u <user> -pw <password> upgradesstables -a yelp" after initializing tables, or the main container will fail to launch after reboot
-        # command: /bin/bash -c "echo 'Importing data...' && cqlsh db_cassandra 9042 -f /init/init.cql && sstableloader -d db_cassandra /var/sstable/yelp/reviews && echo 'keyspace initialized.'"
-        command: /bin/bash -c "echo 'Importing data...' && sleep 36000"
+        command: /bin/bash -c "sleep 45 && echo 'loading cassandra keyspace...' && cqlsh db_cassandra 9042 -f /init/init.cql && echo 'keyspace initialized.'"
 
+    db_cassandra_import:
+        build: "./cassandra/import"
+        profiles:
+            - cassandra-import
+        environment:
+            - NODE_URL=db_cassandra
+            - CASSANDRA_USER=${CASSANDRA_USER}
+            - CASSANDRA_PASSWORD=${CASSANDRA_PASSWORD}
+            - PATH_PREFIX=./data
+        volumes:
+            - ./data/yelp_dataset/:/usr/src/app/data:ro
     db_mongo:
         image: mongo
         profiles:
@@ -84,8 +93,8 @@ services:
             - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
             - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
         command:
-            - '--config'
-            - '/etc/mongo/mongod.yaml'
+            - "--config"
+            - "/etc/mongo/mongod.yaml"
         volumes:
             - ./mongo/config:/etc/mongo/:ro
             - ./mongo/init/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
