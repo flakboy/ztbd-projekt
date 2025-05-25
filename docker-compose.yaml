@@ -83,6 +83,15 @@ services:
             - PATH_PREFIX=./data
         volumes:
             - ./data/yelp_dataset/:/usr/src/app/data:ro
+
+    db_cassandra_query:
+        build: "./cassandra/queries"
+        profiles:
+            - cassandra-query
+        environment:
+            - NODE_URL=db_cassandra
+            - CASSANDRA_USER=${CASSANDRA_USER}
+            - CASSANDRA_PASSWORD=${CASSANDRA_PASSWORD}
     db_mongo:
         image: mongo
         profiles:
